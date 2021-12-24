@@ -6,6 +6,6 @@ Following Example lets you provision the following resources using Terraform
 * SSH Key to be attached to instance
 * EC2 Instance to Run K8S Instance 
 
-#Pre-Req to Run 
+# Pre-Req to Run 
 
 *Python3 
