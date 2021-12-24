@@ -6,13 +6,11 @@ services:
     build: .
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/conduit
+      - NODE_ENV=production
     ports:
       - "3000:3000"
     depends_on: 
       - mongodb
-    networks:
-      - appnetwork
-      - dbnetwork
   mongodb:
     container_name: mongodb
     image: mongo
@@ -20,10 +18,10 @@ services:
       - ./conduit:/data/db/
     ports:
       - "27017:27017"
-    networks: 
-      - dbnetwork
-networks:
-  dbnetwork:
-    driver: bridge
-  appnetwork:
-    driver: bridge
+secrets:
+  AUTH_DOMAIN:
+    external: true
+  AUTH_SECRET:
+    external: true
+  STORAGE_HOST:
+    external: true
