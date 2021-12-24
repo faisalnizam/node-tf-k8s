@@ -1,2 +1,8 @@
-# node-tf-k8s
-Example Orchestration tool to create VPC, local K8S platform, Jenkins Docker, Pipeline to deloy helm resource 
+# Node Run on Minikube
+Following Example lets you provision the following resources using Terraform 
+
+* VPC For Provisioning of Resournces
+* Subnets and Default Security Group
+* SSH Key to be attached to instance
+* EC2 Instance to Run K8S Instance 
+
