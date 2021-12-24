@@ -1,8 +1,9 @@
+import os
 import sys
 import subprocess
-import os
+from path import Path
 
-home_dir = os.system("cd ~")
+
 print("================")
 print("Setup Environment Automation\n") 
 
@@ -15,8 +16,14 @@ vpcname = input("Enter VPC Name to Create: ");
 
 cidr = input("Enter CIDR for VPC to Use e.g 10.20.0.0/18:  ")
 
+os.chdir('terraform/env')
 
-#bashCommand = "ls -lash"
-#process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+terraformCommand = "terraform plan -var region=eu-west-1 -var vpcname=swycl-vpc -var cidr=10.10.0.0/16 -var profile=lyve_qa "
+process = subprocess.Popen(terraformCommand, shell=True,  stdout=subprocess.PIPE)
+print(process.communicate()).decode('utf-8')
+
+
+#out, err = process.communicate()
+#print(out)
+#process.stdout.decode('utf-8')
 #print(process.communicate())
-

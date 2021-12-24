@@ -1,0 +1,34 @@
+import os
+import sys
+import subprocess
+from path import Path
+from python_terraform import *
+
+# Declare Sources
+tf=Terraform() 
+
+print("================")
+print("Setup Environment Automation\n") 
+
+
+profile = input("Enter AWS Profile to use:")
+
+region = input("Enter Region to User:")
+
+vpcname = input("Enter VPC Name to Create:") 
+
+cidr = input("Enter CIDR for VPC to Use e.g 10.20.0.0/18:")
+
+
+os.chdir('terraform/env')
+
+subprocess.check_output('terraform plan -var region=eu-west-1 -var vpcname=swycl-vpc -var cidr=10.10.0.0/16 -var profile=lyve_qa')
+
+
+#tf.plan(no_color=IsFlagged, input=False, refresh=False, capture_output=True, var={'region':region, 'profile':profile, 'vpcname':vpcname, 'cidr':cidr})
+#print(tf.plan())
+
+#tf = Terraform(working_dir='terraform/env', variables={'count':profile})
+#tf.plan(no_color=IsFlagged, refresh=False, input=True, capture_output=True, variables={'region':'region'})
+#tf.plan(no_color=IsFlagged, refresh=False, input=True, capture_output=True, variables={'region':'eu-west-1', 'profile':'lyve_qa', 'vpcname':'abc', 'cidr':'10.20.0.0/18'})
+

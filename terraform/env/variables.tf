@@ -1,15 +1,15 @@
 variable "vpcname" {
-  description = "vpc name to be given" 
+  description = "vpc name to be given"
 }
 
 variable "region" {
-  description = "region to use to create resources" 
+  description = "region to use to create resources"
 }
 
-variable "cidr" { 
+variable "cidr" {
   description = "cidr to be userd"
 }
 
 variable "profile" {
-  description = "profile to use for creation of resources" 
+  description = "profile to use for creation of resources"
 }

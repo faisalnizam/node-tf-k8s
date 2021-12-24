@@ -8,4 +8,6 @@ Following Example lets you provision the following resources using Terraform
 
 # Pre-Req to Run 
 
-*Python3 
+* Python3 
+* pip3 install path
+* pip3 install python-terraform
