@@ -4,14 +4,26 @@ services:
     container_name: node-app
     restart: always
     build: .
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/conduit
     ports:
       - "3000:3000"
-    links:
-      - mongo
-  mongo:
-    container_name: mongo
+    depends_on: 
+      - mongodb
+    networks:
+      - appnetwork
+      - dbnetwork
+  mongodb:
+    container_name: mongodb
     image: mongo
     volumes:
       - ./conduit:/data/db/
     ports:
       - "27017:27017"
+    networks: 
+      - dbnetwork
+networks:
+  dbnetwork:
+    driver: bridge
+  appnetwork:
+    driver: bridge
