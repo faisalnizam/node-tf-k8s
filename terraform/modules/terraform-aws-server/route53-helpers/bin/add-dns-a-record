@@ -1,0 +1,227 @@
+#!/bin/bash
+
+set -e
+
+# This script can be run on an EC2 instance to add a DNS A record pointing to the instance's IP address.
+#
+# This script has the following prerequisites:
+#
+# 1. You must run it on an EC2 instance
+# 2. The EC2 instance must have an IAM role with permissions to change route 53 resource record sets
+# 3. The EC2 instance must have the AWS CLI and jq installed
+
+readonly IP_TYPE_PUBLIC="public"
+readonly IP_TYPE_PRIVATE="private"
+readonly IP_TYPE_DEFAULT="$IP_TYPE_PRIVATE"
+readonly DEFAULT_TTL="10"
+
+function print_usage {
+  echo
+  echo "Usage: add-dns-a-record [OPTIONS]"
+  echo
+  echo "This script can be run on an EC2 instance to add a DNS A record pointing to the instance's IP address."
+  echo
+  echo "Options:"
+  echo
+  echo -e "  --aws-region\t\tThe AWS region the instance is running in (e.g. us-east-1). Required."
+  echo -e "  --hosted-zone-id\tThe id of the Route 53 hosted zone (e.g. the id of the zone for my-company.com). Required."
+  echo -e "  --hostname\t\tThe hostname to use for this node (e.g. foo.my-company.com). Required."
+  echo -e "  --ip-type\t\tThe type of IP address to use for the instance. Must be one of $IP_TYPE_PUBLIC or $IP_TYPE_PRIVATE. Default: $IP_TYPE_PRIVATE."
+  echo -e "  --ttl\t\t\tThe Time to Live, in seconds, for the new DNS entry. DNS resolvers will cache it for this long. Default: $DEFAULT_TTL."
+  echo -e "  --help\t\tShow this help text and exit."
+  echo
+  echo "Example:"
+  echo
+  echo "  add-dns-a-record --aws-region us-east-1 --hosted-zone-id ASDF123456 --hostname foo.my-company.com"
+}
+
+# The AWS EC2 Instance Metadata endpoint
+readonly metadata_endpoint="http://169.254.169.254/latest"
+# The AWS EC2 Instance document endpoint
+readonly instance_identity_endpoint="http://169.254.169.254/latest/dynamic/instance-identity/document"
+# A convenience variable representing 3 hours, for use in requesting a token from the IMDSv2 endpoint
+readonly three_hours_in_s=10800
+
+# This function calls the Instance Metadata Service endpoint version 2 (IMDSv2) which is hardened against certain attack vectors.
+# The endpoint returns a token that must be supplied on subsequent requests. This implementation fetches a new token
+# for each transaction. See:
+# https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service/
+# for more information
+function ec2_metadata_http_get {
+  assert_not_empty "path" "$1"
+  local -r path="$1"
+  token=$(ec2_metadata_http_put $three_hours_in_s)
+  curl "$metadata_endpoint/meta-data/$path" -H "X-aws-ec2-metadata-token: $token" \
+    --silent --location --fail --show-error
+}
+
+function ec2_metadata_http_put {
+  # We allow callers to configure the ttl - if not provided it will default to 6 hours
+  local ttl="$1"
+  if [[ -z "$1" ]]; then
+    ttl=21600
+  elif [[ "$1" -gt 21600 ]]; then
+    ttl=21600
+  fi
+  token=$(curl --silent --location --fail --show-error -X PUT "$metadata_endpoint/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: $ttl")
+  echo "$token"
+}
+
+function ec2_instance_identity_field_get {
+  local -r field="$1"
+  token=$(ec2_metadata_http_put $three_hours_in_s)
+  curl "$instance_identity_endpoint" -H "X-aws-ec2-metadata-token: $token" \
+    --silent --location --fail --show-error | jq -r ".${field}"
+}
+
+function assert_is_ec2_instance {
+  local token
+  token=$(ec2_metadata_http_put 1)
+  [[ -n "$token" ]]
+}
+
+function get_instance_private_ip {
+  ec2_instance_identity_field_get 'privateIp'
+}
+
+function get_instance_public_ip {
+  ec2_metadata_http_get "public-ipv4"
+}
+
+function get_instance_id {
+  ec2_metadata_http_get "instance-id"
+}
+
+function add_route53_record_set {
+  local readonly aws_region="$1"
+  local readonly hosted_zone_id="$2"
+  local readonly node_hostname="$3"
+  local readonly ip_type="$4"
+  local readonly ttl="$5"
+  local ip_address=""
+
+  if [[ "$ip_type" == "$IP_TYPE_PUBLIC" ]]; then
+    ip_address=$(get_instance_public_ip)
+  else
+    ip_address=$(get_instance_private_ip)
+  fi
+
+  local readonly change_batch="
+  {
+    \"Changes\": [
+    {
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+      \"Name\": \"$node_hostname\",
+      \"Type\": \"A\",
+      \"TTL\": $ttl,
+      \"ResourceRecords\": [
+      {
+        \"Value\": \"$ip_address\"
+      }
+    ]
+  }
+}]
+}"
+
+  echo "Adding route53 DNS entry pointing to $node_hostname at this instance's $ip_type IP address $ip_address"
+  aws route53 --region="$aws_region" change-resource-record-sets --hosted-zone-id "$hosted_zone_id" --change-batch "$change_batch"
+
+  # TODO: consider setting node_hostname in /etc/hosts and /etc/hostname so this machine knows its own hostname. For
+  # more info, see: https://aws.amazon.com/premiumsupport/knowledge-center/linux-static-hostname/
+}
+
+function assert_cmd_is_installed {
+  local readonly cmd="$1"
+  if $(! command -v "$cmd" >/dev/null 2>&1); then
+    echo "ERROR: This script requires that '$cmd' is installed"
+    exit 1
+  fi
+}
+
+function assert_not_empty {
+  local readonly arg_name="$1"
+  local readonly arg_value="$2"
+
+  if [[ -z "$arg_value" ]]; then
+    echo "ERROR: The value for '$arg_name' cannot be empty"
+    print_usage
+    exit 1
+  fi
+}
+
+function check_prerequisites {
+  assert_cmd_is_installed "aws"
+  assert_cmd_is_installed "jq"
+  assert_cmd_is_installed "curl"
+  assert_is_ec2_instance
+}
+
+function assert_ip_type_valid {
+  local readonly ip_type="$1"
+
+  if [[ "$ip_type" != "$IP_TYPE_PRIVATE" && "$ip_type" != "$IP_TYPE_PUBLIC" ]]; then
+    echo "ERROR: --ip-type must be one of $IP_TYPE_PRIVATE or $IP_TYPE_PUBLIC"
+    print_usage
+    exit 1
+  fi
+}
+
+function add_dns_record {
+  local aws_region=""
+  local hosted_zone_id=""
+  local hostname=""
+  local ip_type="$IP_TYPE_DEFAULT"
+  local ttl="$DEFAULT_TTL"
+
+  check_prerequisites
+
+  while [[ $# -gt 0 ]]; do
+    local key="$1"
+
+    case "$key" in
+      --aws-region)
+        aws_region="$2"
+        shift
+        ;;
+      --hosted-zone-id)
+        hosted_zone_id="$2"
+        shift
+        ;;
+      --hostname)
+        hostname="$2"
+        shift
+        ;;
+      --ip-type)
+        ip_type="$2"
+        shift
+        ;;
+      --ttl)
+        ttl="$2"
+        shift
+        ;;
+      --help)
+        print_usage
+        exit
+        ;;
+      *)
+        echo "ERROR: Unrecognized argument: $key"
+        print_usage
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  assert_not_empty "--aws-region" "$aws_region"
+  assert_not_empty "--hosted-zone-id" "$hosted_zone_id"
+  assert_not_empty "--hostname" "$hostname"
+  assert_ip_type_valid "$ip_type"
+
+  add_route53_record_set "$aws_region" "$hosted_zone_id" "$hostname" "$ip_type" "$ttl"
+
+  echo "Success!"
+}
+
+add_dns_record "$@"

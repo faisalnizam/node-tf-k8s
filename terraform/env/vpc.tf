@@ -1,4 +1,4 @@
-module "vpc_app_example" {
+module "vpc_app" {
   source = "../modules/terraform-aws-vpc/vpc-app"
 
   vpc_name   = var.vpcname

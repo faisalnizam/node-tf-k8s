@@ -1,0 +1,4 @@
+resource "aws_key_pair" "serverkey" {
+  key_name   = "server-key"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqlHxgRw/k90ND3Uqry9Jvd0pMVRKXuDdsKNqCC5M5vJseM0lJ48kLOCmSKiqYPjL9LYzJYss1xx6znfngkKlsfwymUWUQTzqvLMsBkSShBLU2Fz19Czt612a8lgEl5seBkGiiEC1Srzpf4VEgbzcgZSoFQHTKcXeejz/3B4PybJqlV/uoEtsBfequGR8R3f/KOo4v4S4CivJq/gB0P38vo54sGh+aYqhtPGRXHM9DMoYTDCQOjx8XuSQn0lkYxjJPKzbfHjnsWq63smvOy/H/COdD4jPIsPlwJ6VirsbB2ExkQTdo+/2S3tWoj6H104bRsDEniPaILZ3jkBqibQyn apple@APPLEs-MacBook-Pro.local"
+}
