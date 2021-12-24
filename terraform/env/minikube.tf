@@ -1,7 +1,7 @@
-module "bastion" {
+module "minikube" {
   source = "../modules/terraform-aws-server/" 
 
-  name             = local.ec2_name
+  name             = local.minikube_name
   instance_type    = "m3.medium" 
   ami              = local.ami
   keypair_name     = local.key_pair
@@ -29,6 +29,6 @@ data "cloudinit_config" "cloud_init" {
 }
 
 locals {
-  user_data = file("${path.module}/k8s-data.sh")
+  user_data = file("${path.module}/user-data.sh")
 }
 
