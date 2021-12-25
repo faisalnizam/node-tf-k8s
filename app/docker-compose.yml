@@ -6,7 +6,7 @@ services:
     build: .
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/conduit
-      - NODE_ENV=production
+      - NODE_ENV=dev
     ports:
       - "3000:3000"
     depends_on: 
