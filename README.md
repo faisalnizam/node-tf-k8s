@@ -74,3 +74,11 @@ kubectl -n kubernetes-dashboard port-forward $POD_NAME 8443:8443i &
 ```
 curl https://localhost:8443/
 ```
+
+
+# Ports Allocation 
+
+* Jenkins : 32000
+* App     : 32001
+* Mongodb : 32002 
+
