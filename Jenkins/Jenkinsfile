@@ -186,7 +186,7 @@ def runBuild(){
     sh '''
        cd app
        env.NODE_ENV = "dev"
-       yarn run & 
+       yarn start & 
     '''
 }
 
