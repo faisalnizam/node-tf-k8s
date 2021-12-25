@@ -1,5 +1,9 @@
 pipeline {
-  agent { label 'motf-unix-agent-01' }
+  //agent { label 'motf-unix-agent-01' }
+  agent {
+        docker { image 'node:16.13.1-alpine' }
+    }
+
   environment{
     DEVELOPERS_EMAIL="faisal.nizam@devops.ae"
     GITHUB_REPO="git@github.com:faisalnizam/node-tf-k8s.git" 
