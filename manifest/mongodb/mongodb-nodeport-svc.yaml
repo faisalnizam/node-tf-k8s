@@ -4,6 +4,7 @@ metadata:
   labels:
     app: mongo
   name: mongo-nodeport-svc
+  namespace: nodeapp
 spec:
   ports:
   - port: 27017
