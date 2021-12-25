@@ -18,13 +18,39 @@ Following Example lets you provision the following resources using Terraform
 
 Once the  Cluster is ready cd into ingress and run deploy (Note: this is only for local deployments) 
 
+
+# Create a Cluster ( I am using kind but you can use minikube and enable ingresss using kdata or the manifest from the project) 
+```
+cat <<EOF | kind create cluster --config=-
+> kind: Cluster
+> apiVersion: kind.x-k8s.io/v1alpha4
+> nodes:
+> - role: control-plane
+>   kubeadmConfigPatches:
+>   - |
+>     kind: InitConfiguration
+>     nodeRegistration:
+>       kubeletExtraArgs:
+>         node-labels: "ingress-ready=true"
+>   extraPortMappings:
+>   - containerPort: 80
+>     hostPort: 80
+>     protocol: TCP
+>   - containerPort: 443
+>     hostPort: 443
+>     protocol: TCP
+> EOF
+```
+
+* Configure Ingress (NGINX) using the service
+```
 kubectl apply -f ingress/deploy.yaml
 
 kubectl wait --namespace ingress-nginx \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s
-
+```
 # Install GUI for K8S 
 Once you have K8S (Kind/Minikube) successfully installed and your context is set to your cluster install the GUI 
 
