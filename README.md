@@ -14,6 +14,10 @@ Following Example lets you provision the following resources using Terraform
 * pip3 install python-terraform
 ```
 
+* Docker MongoDB if running locally 
+```
+docker run -d  --name mongo-docker  -p 27017:27017 mongo
+```
 
 # Install Kind Cluster Or Minikube 
 
