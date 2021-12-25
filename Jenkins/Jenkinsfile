@@ -9,7 +9,7 @@ pipeline {
 
     stage('Prepare'){
       parallel{
-        stage('Code-Checkout'){
+        stage('Checkout Code Repo'){
           steps{
             checkout scm
           }
@@ -29,7 +29,7 @@ pipeline {
       }
     }
 
-    stage("Unit Tests"){
+    stage("Run Test Tests"){
       steps{
         runTest()
       }
@@ -130,48 +130,49 @@ def checkoutCode(){
 
 def prepareWorkspace(){
     echo 'Check here if everything is ready to make a build'
-    sh 'java -version'
-    sh 'git --version'
+    sh """"
+        echo "Check If NOde Installed"
+        node -v
+        echo "Change to Directory" 
+        cd app 
+        npm install
+        echo "Run Mongo Service as a Docker to test" 
+        docker run -d  --name mongodb-docker  -p 27017:27017 mongo
+    """
 }
 
 
 def runTest(){
     echo 'Run Php Tests on the Environment' 
     sh '''
-       make run-test
+       cd app 
+       yarn test
     '''
 }
 
 def deployToServer(deployTo){
     echo "Deploying to : ${deployTo}"
     sh '''
-       composer require laravel/envoy --dev
-       composer require predis/predis
-       php vendor/bin/envoy
-       export BUILD=`git rev-parse HEAD`
-       vendor/bin/envoy run deploy --env=staging --build=$BUILD
+        cd app
+        yarn stop
+       
+        docker build -t registry.devops.ae:5050/node:latest node/
+        docker push registry.devops.ae:5050/node:latest
+
     '''
 }
 
 def deployToProduction(deployTo){
     echo "Deploying to : ${deployTo}"
     sh '''
-       composer require laravel/envoy --dev
-       composer require predis/predis
-       php vendor/bin/envoy
-       export BUILD=`git rev-parse HEAD`
-       vendor/bin/envoy run deploy --env=production --build=$BUILD
+      echo "Deploying to Productiom
     '''
 }
 
 def deployToTesting(deployTo){
     echo "Deploying to : ${deployTo}"
     sh '''
-       composer require laravel/envoy --dev
-       composer require predis/predis
-       php vendor/bin/envoy
-       export BUILD=`git rev-parse HEAD`
-       vendor/bin/envoy run deploy --env=testing --build=$BUILD
+      echo "Deploying to Testing
     '''
 }
 
@@ -179,7 +180,9 @@ def deployToTesting(deployTo){
 def runBuild(){
     echo "Building Project" 
     sh '''
-       make build
+       cd app
+       env.NODE_ENV = "dev"
+       yarn run & 
     '''
 }
 
