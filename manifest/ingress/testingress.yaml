@@ -19,7 +19,6 @@ spec:
   selector:
     app: foo
   ports:
-  # Default port used by the image
   - port: 5678
 ---
 kind: Pod
