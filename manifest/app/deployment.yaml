@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodeapp
+  namespace: nodeapp
+  labels:
+    app: nodeapp
+    company: devops
+spec:
+  selector:
+    matchLabels:
+      app: nodeapp
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 20
+  revisionHistoryLimit: 5
+  template:
+    metadata:
+      labels:
+        app: nodeapp
+        company: devops
+    spec:
+      containers:
+        - name: nodeapp
+          image: registry.devops.ae/nodeapp:latest
+          imagePullPolicy: "Always"
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017/conduit"
+            - name: NODE_ENV
+              value: "production"
+            - name: SECRET
+              value: "keyboardCat"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          ports:
+            - containerPort: 3000
+              name: http
+

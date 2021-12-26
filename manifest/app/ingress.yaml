@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nodeapp-ingress
+  namespace: nodeapp
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-devops
+    nginx.ingress.kubernetes.io/proxy-body-size: "32m"
+    nginx.org/client-max-body-size: "32m"
+spec:
+  rules:
+    - host: nodeapp.devops.ae
+      http:
+        path: 
+        - backend:
+            serviceName: nodeapp
+            servicePort: 300
+  tls:
+    - hosts:
+      - nodeapp.devops.ae
