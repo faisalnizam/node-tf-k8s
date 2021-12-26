@@ -10,12 +10,35 @@ metadata:
     nginx.org/client-max-body-size: "32m"
 spec:
   rules:
-    - host: nodeapp.devops.ae
-      http:
-        path: 
-        - backend:
-            serviceName: nodeapp
-            servicePort: 300
-  tls:
-    - hosts:
-      - nodeapp.devops.ae
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: nodeapp 
+            port:
+              number: 3000
+---
+
+#apiVersion: networking.k8s.io/v1beta1
+#kind: Ingress
+#metadata:
+#  name: nodeapp
+#  namespace: nodeapp
+#  annotations:
+#    kubernetes.io/ingress.class: "nginx"
+#    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+#spec:
+#  tls:
+#  - hosts:
+#    - ops-gateway.oms.uatk8s.eyewa.com
+#    secretName: ops-gateway-le
+#  rules:
+#  - host: ops-gateway.oms.uatk8s.eyewa.com
+#    http:
+#      paths:
+#      - backend:
+#          serviceName: ops-gateway
+#          servicePort: 80
+

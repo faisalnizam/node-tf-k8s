@@ -26,11 +26,12 @@ spec:
     spec:
       containers:
         - name: nodeapp
-          image: registry.devops.ae/nodeapp:latest
+          #image: registry.devops.ae/nodeapp:latest
+          image: node:0.10.40
           imagePullPolicy: "Always"
           env:
             - name: MONGODB_URI
-              value: "mongodb://mongodb:27017/conduit"
+              value: "mongodb://mongo-nodeport-svc:27017/"
             - name: NODE_ENV
               value: "production"
             - name: SECRET
@@ -44,5 +45,4 @@ spec:
               cpu: "200m"
           ports:
             - containerPort: 3000
-              name: http
 

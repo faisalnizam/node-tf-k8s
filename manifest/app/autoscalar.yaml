@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ops-gateway
-  namespace: oms
+  name: nodeapp
+  namespace: nodeapp
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ops-gateway
+    name: nodeapp 
   minReplicas: 1
   maxReplicas: 10
   metrics:
