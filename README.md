@@ -6,17 +6,36 @@ Following Example lets you provision the following resources using Terraform
 * SSH Key to be attached to instance
 * EC2 Instance to Run K8S Instance 
 
-# Pre-Req to Run 
-
-* Python3 
-```
-* pip3 install path
-* pip3 install python-terraform
-```
 
 * Docker MongoDB if running locally 
+If you want to run the entire project outside with a dockerized mongo use
 ```
 docker run -d  --name mongo-docker  -p 27017:27017 mongo
+```
+
+# Compile Docker Image 
+```
+cd app 
+docker build . -t nodeapp/myimage 
+
+```
+
+# To Run Project Locally using docker-compose 
+
+```
+cd app/
+docker-compose up -d 
+curl localhost:3000
+
+```
+
+
+# Jenkinsfile
+* In order to run the project using Jenkins and see the pipeline you can use the following as a reference 
+
+```
+cd Jenkins
+cat Jenkinsfile 
 ```
 
 # Install Kind Cluster Or Minikube 
@@ -47,18 +66,9 @@ cat <<EOF | kind create cluster --config=-
 >     protocol: TCP
 > EOF
 ```
-
-* Configure Ingress (NGINX) using the service
-```
-kubectl apply -f ingress/deploy.yaml
-
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-```
-# Install GUI for K8S 
-Once you have K8S (Kind/Minikube) successfully installed and your context is set to your cluster install the GUI 
+# Optional : Configure GUI For General Adminsitartion 
+* Install GUI for K8S 
+* Once you have K8S (Kind/Minikube) successfully installed and your context is set to your cluster install the GUI 
 
 ```
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
@@ -73,6 +83,30 @@ kubectl -n kubernetes-dashboard port-forward $POD_NAME 8443:8443i &
 # Open URL 
 ```
 curl https://localhost:8443/
+```
+
+
+# Manifests 
+
+All manifests are located within the manifest directory 
+
+manifest/jenkins  `To Install Jenkins on your cluster and create ingress rules to expose it outisde`
+manifest/ingress  `To Install NGINX Ingress Controller`
+manifest/mongo    `To Install mongodb on the cluster and expose via nodeport` 
+manifest/app      `To Deploy app and configure the Ingress` 
+
+
+* Configure Ingress (NGINX) using the service
+
+Change  Directory to manifest/
+
+```
+kubectl apply -f ingress/deploy.yaml
+
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
 ```
 
 
